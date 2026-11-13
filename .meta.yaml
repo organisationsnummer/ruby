@@ -1,0 +1,4 @@
+name: "Ruby"
+maintainer: "@rasmusbe"
+spec: 1.1
+workflow: "ruby.yml"

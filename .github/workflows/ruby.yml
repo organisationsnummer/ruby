@@ -1,0 +1,43 @@
+
+name: build
+
+on:
+  push:
+    branches:
+      - main
+
+  # Run tests for any PRs.
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Quoted, since YAML would read an unquoted 4.0 as the number 4.
+        ruby-version: ['3.3', '3.4', '4.0']
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Set up Ruby ${{ matrix.ruby-version }}
+      uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+    - name: gem install
+      run: |
+        gem install personnummer --version '~> 3.1, >= 3.1.1'
+        gem install minitest
+    - name: test
+      run: rake
+
+  # Single stable check for branch protection, so the ruleset does not need
+  # to change when the matrix does.
+  tests-passed:
+    if: always()
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any test job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
